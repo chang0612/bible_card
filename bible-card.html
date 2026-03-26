@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word of Grace — 聖經經文卡牌</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Serif TC', serif;
+    background: linear-gradient(135deg, #1a0a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    color: #fff;
+  }
+
+  .app {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 32px 20px 48px;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header { text-align: center; margin-bottom: 28px; }
+  .header h1 {
+    font-family: 'Cinzel', serif;
+    color: #f0d080;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    margin-bottom: 6px;
+  }
+  .header .subtitle {
+    color: rgba(240,208,128,0.55);
+    font-size: 13px;
+    letter-spacing: 2px;
+  }
+
+  /* ── Pages ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Category Grid ── */
+  .cats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+  }
+
+  .cat-btn {
+    background: rgba(255,255,255,0.05);
+    border: 0.5px solid rgba(240,208,128,0.25);
+    border-radius: 12px;
+    padding: 14px 10px;
+    cursor: pointer;
+    text-align: center;
+    color: rgba(255,255,255,0.82);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 13px;
+    line-height: 1.6;
+    transition: all 0.18s;
+  }
+  .cat-btn:hover {
+    background: rgba(240,208,128,0.12);
+    border-color: rgba(240,208,128,0.55);
+    color: #f0d080;
+    transform: translateY(-2px);
+  }
+  .cat-icon { font-size: 20px; display: block; margin-bottom: 5px; }
+
+  /* ── Card Page ── */
+  .card-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .cat-label {
+    color: #f0d080;
+    font-size: 16px;
+    letter-spacing: 3px;
+    text-align: center;
+  }
+  .cards-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* ── Flip Card ── */
+  .verse-card {
+    width: 165px;
+    height: 225px;
+    perspective: 900px;
+    cursor: pointer;
+  }
+  .card-inner {
+    width: 100%; height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.65s cubic-bezier(.4,0,.2,1);
+  }
+  .verse-card.flipped .card-inner { transform: rotateY(180deg); }
+  .card-face {
+    position: absolute;
+    width: 100%; height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  .card-back {
+    background: linear-gradient(145deg, #1e1040 0%, #2a1a5e 100%);
+    border: 1px solid rgba(240,208,128,0.38);
+  }
+  .cb-deco {
+    position: absolute;
+    top: 7px; left: 7px; right: 7px; bottom: 7px;
+    border: 0.5px solid rgba(240,208,128,0.15);
+    border-radius: 10px;
+    pointer-events: none;
+  }
+  .cross {
+    width: 40px; height: 40px;
+    position: relative;
+    margin-bottom: 10px;
+  }
+  .cross::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 5px; height: 100%;
+    background: rgba(240,208,128,0.5);
+    border-radius: 3px;
+  }
+  .cross::after {
+    content: '';
+    position: absolute;
+    top: 35%; left: 0;
+    width: 100%; height: 5px;
+    background: rgba(240,208,128,0.5);
+    border-radius: 3px;
+  }
+  .cb-text {
+    color: rgba(240,208,128,0.45);
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 2.5px;
+  }
+
+  .card-front {
+    background: linear-gradient(160deg, #f9f3e8 0%, #efe6cc 100%);
+    border: 1px solid rgba(180,140,60,0.45);
+    transform: rotateY(180deg);
+    padding: 16px 13px;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .v-ref {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    color: #8b6914;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+  .v-text {
+    font-size: 11.5px;
+    color: #3a2808;
+    line-height: 1.85;
+    text-align: center;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+  }
+  .v-cat {
+    font-size: 9px;
+    color: #a07828;
+    text-align: center;
+    letter-spacing: 1px;
+    padding-top: 6px;
+    border-top: 0.5px solid rgba(160,120,40,0.3);
+    width: 100%;
+  }
+
+  /* ── Buttons ── */
+  .btn-gold {
+    background: transparent;
+    border: 1px solid rgba(240,208,128,0.5);
+    border-radius: 50px;
+    padding: 12px 36px;
+    color: #f0d080;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.2s;
+  }
+  .btn-gold:hover { background: rgba(240,208,128,0.12); border-color: #f0d080; }
+  .btn-gold:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .btn-ghost {
+    background: transparent;
+    border: none;
+    color: rgba(240,208,128,0.45);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    transition: color 0.2s;
+  }
+  .btn-ghost:hover { color: #f0d080; }
+
+  .flip-hint {
+    font-size: 11px;
+    color: rgba(240,208,128,0.38);
+    text-align: center;
+    margin-top: -8px;
+  }
+
+  .nav-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 4px;
+  }
+
+  /* ── Prayer Page ── */
+  .prayer-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    padding: 8px 0 24px;
+  }
+
+  .prayer-verse-box {
+    background: rgba(240,208,128,0.07);
+    border: 0.5px solid rgba(240,208,128,0.3);
+    border-radius: 16px;
+    padding: 20px 24px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+  }
+  .prayer-verse-ref {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    color: #f0d080;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+  }
+  .prayer-verse-text {
+    font-size: 14px;
+    color: rgba(255,255,255,0.9);
+    line-height: 2;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 480px;
+  }
+  .divider-line { flex: 1; height: 0.5px; background: rgba(240,208,128,0.22); }
+  .divider-icon { color: rgba(240,208,128,0.5); font-size: 14px; }
+
+  .prayer-box {
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid rgba(240,208,128,0.2);
+    border-radius: 16px;
+    padding: 22px 24px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+  }
+  .prayer-title {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    color: rgba(240,208,128,0.6);
+    letter-spacing: 2.5px;
+    margin-bottom: 14px;
+  }
+  .prayer-text {
+    font-size: 14px;
+    color: rgba(255,255,255,0.82);
+    line-height: 2.2;
+    font-style: italic;
+  }
+  .amen {
+    display: block;
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: #f0d080;
+    letter-spacing: 3px;
+    margin-top: 14px;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(240,208,128,0.25); border-radius: 3px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 480px) {
+    .app { padding: 24px 14px 40px; }
+    .header h1 { font-size: 20px; }
+    .cats-grid { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; }
+    .verse-card { width: 145px; height: 205px; }
+    .prayer-verse-text, .prayer-text { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>✦ WORD OF GRACE ✦</h1>
+    <div class="subtitle">聖 經 經 文 卡 牌</div>
+  </div>
+
+  <!-- Page 1: Select Category -->
+  <div class="page active" id="pg-select">
+    <div class="cats-grid" id="catGrid"></div>
+  </div>
+
+  <!-- Page 2: Card Draw -->
+  <div class="page" id="pg-cards">
+    <div class="card-area">
+      <div class="cat-label" id="catTitle"></div>
+      <div class="cards-row" id="cardsRow"></div>
+      <p class="flip-hint">點擊卡牌翻開經文，再點擊「進入禱告」</p>
+      <button class="btn-gold" id="drawBtn">✦ 隨機抽取一張 ✦</button>
+      <div class="nav-row">
+        <button class="btn-ghost" id="backBtn">← 返回情境</button>
+        <button class="btn-gold" id="prayBtn" style="font-size:13px;padding:10px 24px;" disabled>🙏 進入禱告</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page 3: Prayer -->
+  <div class="page" id="pg-prayer">
+    <div class="prayer-page">
+      <div class="prayer-verse-box">
+        <div class="prayer-verse-ref" id="pr-ref"></div>
+        <div class="prayer-verse-text" id="pr-vtext"></div>
+      </div>
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-icon">✦</div>
+        <div class="divider-line"></div>
+      </div>
+      <div class="prayer-box">
+        <div class="prayer-title">— 禱  告 —</div>
+        <div class="prayer-text" id="pr-prayer"></div>
+        <span class="amen">阿  們</span>
+      </div>
+      <div class="nav-row">
+        <button class="btn-ghost" id="prayBackCards">← 返回卡牌</button>
+        <button class="btn-gold" id="newDrawBtn" style="font-size:12px;padding:10px 22px;">✦ 再抽一張</button>
+        <button class="btn-ghost" id="prayBackSelect">↩ 換情境</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const data = [
+  { icon:"💼", name:"工作壓力", verses:[
+    { ref:"馬太福音 11:28", text:"凡勞苦擔重擔的人，可以到我這裡來，我就使你們得安息。", prayer:"天父，我今天感到工作的重擔壓在我身上。求你接過我的疲乏，賜我力量與智慧去面對每一項挑戰。提醒我，我的身份不在於工作成就，乃在於你的愛。" },
+    { ref:"腓立比書 4:13", text:"我靠著那加給我力量的，凡事都能做。", prayer:"主耶穌，當我感到自己能力不足時，求你成為我的力量。我願意倚靠你，而非只靠自己。讓我在壓力中仍能平靜，因為你在我裡面動工。" },
+    { ref:"詩篇 55:22", text:"你要把你的重擔卸給耶和華，他必撫養你；他永不叫義人動搖。", prayer:"耶和華神，我現在把所有工作的壓力和憂慮交在你手中。求你撫養我，托住我，使我不因重擔而倒下，在你懷抱中找到真正的安息。" }
+  ]},
+  { icon:"💰", name:"財務困難", verses:[
+    { ref:"腓立比書 4:19", text:"我的神必照他榮耀的豐富，在基督耶穌裡，使你們一切所需用的都充足。", prayer:"供應的神，我坦誠地告訴你我此刻的財務需要。我選擇信靠你，而非陷入恐懼。求你按你豐富的恩典開路，也賜我智慧管理手中所有的。" },
+    { ref:"詩篇 37:25", text:"我從前年幼，現在年老，卻未見過義人被棄，也未見過他的後裔討飯。", prayer:"信實的主，你的話語讓我有盼望。在財務困難中，我選擇不絕望，因你從未遺棄愛你的人。求你引導我，供應我每日所需，使我學會知足。" },
+    { ref:"申命記 8:18", text:"你要記念耶和華你的神，因為得財富的力量是他給你的。", prayer:"天父，提醒我一切能力都是你所賜。求你賜我工作的機會與智慧，使我脫離困乏。在等待中，使我的心仍然倚靠你，不失去信心。" }
+  ]},
+  { icon:"💑", name:"夫妻關係", verses:[
+    { ref:"以弗所書 4:32", text:"並要以恩慈相待，存憐憫的心，彼此饒恕，正如神在基督裡饒恕了你們一樣。", prayer:"愛的神，求你軟化我的心，讓我以恩慈對待我的伴侶。當我想要爭辯時，賜我謙遜；當我受傷時，賜我饒恕的能力。讓你的愛流過我們的婚姻。" },
+    { ref:"哥林多前書 13:4", text:"愛是恆久忍耐，又有恩慈；愛是不嫉妒，不自誇，不張狂。", prayer:"主，求你讓我活出真實的愛——不是感情用事，而是每日的選擇。在我們的關係中，讓我先學習付出，而非計算得失。使我們的婚姻榮耀你。" },
+    { ref:"傳道書 4:9", text:"兩個人總比一個人好，因為二人勞碌同得美好的果效。", prayer:"神啊，感謝你賜給我這段婚姻關係。在我們面臨衝突或距離時，求你提醒我們：我們是同伴，不是對手。讓我們攜手同行，在你裡面合而為一。" }
+  ]},
+  { icon:"😟", name:"焦慮憂愁", verses:[
+    { ref:"腓立比書 4:6-7", text:"應當一無掛慮，只要凡事藉著禱告、祈求，和感謝，將你們所要的告訴神。", prayer:"天父，我把心中所有的憂慮和害怕，一一擺在你面前。我選擇用感謝代替擔憂，用禱告代替焦慮。求你賜我那超越理解的平安，守住我的心。" },
+    { ref:"彼得前書 5:7", text:"你們要將一切的憂慮卸給神，因為他顧念你們。", prayer:"主耶穌，你說你顧念我。在我焦慮不安的時刻，讓這句話成為我的錨。我現在將憂慮一件一件地交給你，相信你必看顧。" },
+    { ref:"約翰福音 14:27", text:"我留下平安給你們，我將我的平安賜給你們；你們心裡不要憂愁，也不要膽怯。", prayer:"賜平安的主，你留下的平安不像世界的平安。求你讓這真實的平安充滿我的內心，驅散一切的憂愁與膽怯，使我能在風浪中仍然安靜。" }
+  ]},
+  { icon:"🙏", name:"信心軟弱", verses:[
+    { ref:"希伯來書 11:1", text:"信就是所望之事的實底，是未見之事的確據。", prayer:"神啊，我承認我的信心很小，有時充滿懷疑。求你增加我的信心，讓我在看不見的事上仍能相信你的話語是真實可信的。" },
+    { ref:"馬可福音 9:23", text:"耶穌對他說：你若能信，在乎信的人，凡事都能。", prayer:"主耶穌，我像那個父親一樣呼喊：我信，但我信不足！求你幫助我克服不信，在每一次懷疑中，讓我選擇再次仰望你。" },
+    { ref:"羅馬書 10:17", text:"可見信道是從聽道來的，聽道是從基督的話來的。", prayer:"天父，讓我更多親近你的話語，讓聖靈透過聖經對我說話。在讀到真理的時刻，堅固我的信心，使我不再漂泊，乃是穩穩立在你的應許上。" }
+  ]},
+  { icon:"😔", name:"失敗挫折", verses:[
+    { ref:"羅馬書 8:28", text:"我們曉得萬事都互相效力，叫愛神的人得益處。", prayer:"全知的神，這次的失敗讓我很難受。但我相信你能使萬事互相效力。求你幫助我從中學習，並看見你在其中的美意，讓這挫折成為成長的養分。" },
+    { ref:"箴言 24:16", text:"因為義人雖七次跌倒，仍必興起；惡人卻被禍患傾倒。", prayer:"主，我跌倒了，但我不要放棄。求你扶起我，賜我再次站立的勇氣。讓我記得，跌倒不是終點，在你恩典中再次起身才是信仰的見證。" },
+    { ref:"以賽亞書 40:31", text:"但那等候耶和華的，必重新得力，他們必如鷹展翅上騰。", prayer:"耶和華，我疲憊地等候在你面前。求你更新我的力量，如同老鷹換毛一般。讓我在等候中不失去盼望，相信你必使我再次飛翔。" }
+  ]},
+  { icon:"😢", name:"悲傷哀痛", verses:[
+    { ref:"詩篇 34:18", text:"耶和華靠近傷心的人，拯救靈性痛悔的人。", prayer:"耶和華，你靠近傷心的人。我現在很痛，求你靠近我。讓我感受到你的同在，在淚水中知道你並未離去，你的手一直托著我。" },
+    { ref:"馬太福音 5:4", text:"哀慟的人有福了，因為他們必得安慰。", prayer:"安慰者神，你應許哀慟的人必得安慰。我帶著破碎的心來到你面前，求你親自安慰我，讓你的愛如油膏抹在我的傷口上，使我慢慢得到醫治。" },
+    { ref:"啟示錄 21:4", text:"神要擦去他們一切的眼淚，不再有死亡，也不再有悲哀、哭號、疼痛。", prayer:"天父，謝謝你應許終有一天要擦乾所有的眼淚。在我今天的哀痛中，讓永恆的盼望支撐我，知道這一切的苦痛都是暫時的，你必使萬事更新。" }
+  ]},
+  { icon:"🏥", name:"疾病痛苦", verses:[
+    { ref:"詩篇 103:3", text:"他赦免你的一切罪孽，醫治你的一切疾病。", prayer:"醫治的神，我帶著軟弱的身體來到你面前。求你的醫治大能臨到我，無論是身體還是心靈的病痛。我相信你是耶和華拉法，是那醫治我的神。" },
+    { ref:"雅各書 5:15", text:"出於信心的祈禱要救那病人，主必叫他起來。", prayer:"主，我以信心向你禱告，求你醫治。同時，我也信靠你的主權，知道你的時間和方式都是最好的。在病痛中，讓我仍能讚美你，經歷你的同在。" },
+    { ref:"以賽亞書 41:10", text:"你不要害怕，因為我與你同在；不要驚惶，因為我是你的神。", prayer:"神啊，面對疾病我有時感到恐懼。你說：不要害怕，我與你同在。讓這句話在我心中深深紮根，使我在每一次檢查、每一個夜晚，都感受到你的陪伴與保護。" }
+  ]},
+  { icon:"👨‍👩‍👦", name:"親子教養", verses:[
+    { ref:"箴言 22:6", text:"教養孩童，使他走當行的道，就是到老他也不偏離。", prayer:"天父，感謝你將孩子託付給我。求你賜我智慧知道如何教導他們，讓我以身作則，用愛與真理帶領他們走在你的道路上。" },
+    { ref:"以弗所書 6:4", text:"你們做父親的，不要惹兒女的氣，只要照著主的教訓和警戒，養育他們。", prayer:"主，當我在教養上感到挫折或憤怒時，求你幫助我以耐心和愛心回應孩子。讓我成為他們認識你的橋樑，而非障礙。" },
+    { ref:"詩篇 127:3", text:"兒女是耶和華所賜的產業；所懷的胎是他所給的賞賜。", prayer:"神啊，提醒我孩子是你的賞賜，不是我的負擔。求你更新我的眼光，讓我珍視與孩子同在的每一刻，並將他們的未來交托在你的手中。" }
+  ]},
+  { icon:"🤝", name:"人際衝突", verses:[
+    { ref:"羅馬書 12:18", text:"若是能行，總要盡力與眾人和睦。", prayer:"和睦之神，在這段關係中有很多摩擦與誤解。求你幫助我邁出和好的第一步，賜我謙遜的心，願意聆聽，願意放下自我，盡力追求和睦。" },
+    { ref:"馬太福音 5:9", text:"使人和睦的人有福了，因為他們必稱為神的兒子。", prayer:"主耶穌，你是和平的君王。讓我成為帶來和平的人，而非製造紛爭。在衝突中，求你讓我先看見對方的需要，以你的眼光看人。" },
+    { ref:"箴言 15:1", text:"回答柔和，使怒消退；言語暴戾，觸動怒氣。", prayer:"天父，求你看守我的嘴，讓我的言語帶來醫治而非傷害。當我想要反擊時，提醒我柔和的話語能化解憤怒。讓聖靈管理我的口舌。" }
+  ]},
+  { icon:"😴", name:"睡眠困擾", verses:[
+    { ref:"詩篇 4:8", text:"我必安然躺下睡覺，因為獨有你耶和華使我安然居住。", prayer:"平安的主，夜晚我輾轉難眠，心思紛亂。求你讓我的心靈在你懷抱中安歇，趕走一切的焦慮與黑暗思想，賜我安穩甜美的睡眠。" },
+    { ref:"箴言 3:24", text:"你躺下，必不懼怕；你躺臥，睡得香甜。", prayer:"天父，你應許義人躺下必不懼怕、睡得香甜。我領受這個應許，將今天所有的重擔交給你，讓身體與靈魂在你的保護下進入真正的安息。" },
+    { ref:"詩篇 127:2", text:"耶和華所親愛的，必叫他安然睡覺。", prayer:"主，你愛我，你叫你親愛的安然睡覺。讓我在這個夜晚真實體驗你的愛，不再被焦慮捆綁，以孩子靠在父親懷中的安心，閉上眼睛休息。" }
+  ]},
+  { icon:"🌪️", name:"迷茫迷失", verses:[
+    { ref:"箴言 3:5-6", text:"你要專心仰賴耶和華，不可倚靠自己的聰明，在你一切所行的事上都要認定他，他必指引你的路。", prayer:"引路的神，我不知道前方的路在哪裡，感到迷失與困惑。我選擇放下自己的算計，仰賴你的帶領。求你一步一步指引我，讓我認識你的旨意。" },
+    { ref:"詩篇 119:105", text:"你的話是我腳前的燈，是我路上的光。", prayer:"神啊，當周圍一片黑暗時，你的話是我腳前的燈。求你讓聖靈透過你的話語照亮我的下一步，使我不跌倒，能夠穩穩地行走在你為我預備的道路上。" },
+    { ref:"以賽亞書 30:21", text:"你或向左或向右，你必聽見後邊有聲音說：這是正路，要行在其間。", prayer:"主，我感謝你應許要引導我。求你讓我的心靈安靜下來，能夠聽見你的聲音。當我在岔路口猶豫時，清楚地指示我方向，使我走在你的正道上。" }
+  ]},
+  { icon:"💔", name:"失戀分手", verses:[
+    { ref:"詩篇 147:3", text:"他醫好傷心的人，裹好他們的傷處。", prayer:"醫治的神，我的心很痛。求你靠近我，親自醫好我這顆破碎的心，裹好我的傷處。讓我在這段等待痊癒的時間裡，更深認識你的愛是永不改變的。" },
+    { ref:"耶利米書 29:11", text:"耶和華說：我知道我向你們所懷的意念，是賜平安的意念，不是降災禍的意念，要叫你們末後有指望。", prayer:"天父，即使我現在看不見未來，你說你對我的計畫是賜平安、有盼望的。我選擇相信你，而不是沉浸在失落中。求你在適當的時間，成就你美好的旨意。" },
+    { ref:"以賽亞書 43:19", text:"看哪，我要做一件新事，如今要發現，你們豈不知道嗎？", prayer:"更新的神，謝謝你應許要做新事。求你在這段結束之後，在我生命中開一條新路。讓我充滿期待，而非只看失去的，知道你正在預備更好的。" }
+  ]},
+  { icon:"⚖️", name:"面臨抉擇", verses:[
+    { ref:"雅各書 1:5", text:"你們中間若有缺少智慧的，應當求那厚賜與眾人、也不斥責人的神，主就必賜給他。", prayer:"智慧的神，我面臨一個重要的決定，不知如何選擇。你說只要求你，你就賜給智慧。我現在誠心地求你，賜我清晰的心思，辨別何為你的旨意。" },
+    { ref:"詩篇 32:8", text:"我要教導你，指示你當行的路；我要定睛在你身上勸戒你。", prayer:"天父，感謝你說要親自教導和指引我。求你讓我的心安靜，能夠感受到你的引導。讓你的平安如裁判一樣，指示我做出蒙你喜悅的決定。" },
+    { ref:"箴言 16:9", text:"人心籌算自己的道路，惟耶和華指引他的腳步。", prayer:"主，我做了我能做的計畫與評估，現在我將最終的決定交托給你。求你指引我的腳步，即使我走錯了，你也能使萬事互相效力，帶領我走回正軌。" }
+  ]},
+  { icon:"😠", name:"憤怒怨恨", verses:[
+    { ref:"以弗所書 4:26", text:"生氣卻不要犯罪，不可含怒到日落。", prayer:"主耶穌，我現在很憤怒。求你幫助我在憤怒中不犯罪，不讓這憤怒腐蝕我的心。幫助我在日落之前處理好這情緒，不讓魔鬼趁虛而入，奪走我的平安。" },
+    { ref:"羅馬書 12:19", text:"親愛的弟兄，不要自己伸冤，寧可讓步，聽憑主怒，因為伸冤在我，我必報應。", prayer:"公義的神，我把這不公平的事交給你，求你為我伸冤。讓我放下自己動手報復的衝動，相信你是公義的法官，在你的時間以你的方式處理一切。" },
+    { ref:"箴言 14:29", text:"不輕易發怒的，大有聰明；性情暴躁的，大顯愚妄。", prayer:"天父，求你賜我溫柔和忍耐的靈。讓聖靈在我即將爆發的時刻提醒我，幫助我控制怒氣，以智慧而非衝動來回應，使我的生命更榮耀你。" }
+  ]},
+  { icon:"🏠", name:"家庭問題", verses:[
+    { ref:"約書亞記 24:15", text:"至於我和我家，我們必定事奉耶和華。", prayer:"神啊，我宣告：我和我家要事奉耶和華。在家庭的紛爭與困難中，求你成為我們家的中心，讓每一個家庭成員都感受到你的愛，並歸向你。" },
+    { ref:"詩篇 128:3", text:"你妻子在你內室，好像多結果子的葡萄樹；你兒女圍繞你的桌子，好像橄欖樹的嫩芽。", prayer:"賜福的神，謝謝你賜給我這個家庭。在問題與混亂中，求你提醒我家的珍貴。讓我用感恩的眼光看家人，並努力建立一個充滿你同在的家。" },
+    { ref:"箴言 17:1", text:"設筵滿屋，大家相爭，不如有塊乾餅，大家相安。", prayer:"主，家庭的和睦比外在的豐富更寶貴。求你修復我們家中破裂的關係，讓我們學習彼此包容、接納，在平靜安穩中享受你所賜的家庭之福。" }
+  ]},
+  { icon:"🎓", name:"學業考試", verses:[
+    { ref:"腓立比書 4:13", text:"我靠著那加給我力量的，凡事都能做。", prayer:"天父，面對即將來臨的考試，我感到壓力與緊張。求你賜我清醒的頭腦，良好的記憶力，以及面對挑戰的勇氣。讓我知道我不是孤單面對，你與我同在。" },
+    { ref:"箴言 2:6", text:"因為耶和華賜人智慧，知識和聰明都由他口而出。", prayer:"智慧的源頭，我今天求你賜我讀書的智慧與理解力。讓所學的知識在需要時能靈活運用。不管結果如何，讓我竭盡全力，然後將結果交托給你。" },
+    { ref:"提摩太後書 2:15", text:"你當竭力在神面前得蒙喜悅，作無愧的工人，按著正意分解真理的道。", prayer:"主耶穌，讓我以盡力而為的態度面對學業，不是為了讓人誇獎，乃是要在你面前無愧。無論成績如何，讓我的品格與努力都榮耀你的名。" }
+  ]},
+  { icon:"🌊", name:"危機災難", verses:[
+    { ref:"詩篇 46:1", text:"神是我們的避難所，是我們的力量，是我們在患難中隨時的幫助。", prayer:"避難所的神，在這次危機中，我跑到你這裡來。你是我的力量，在患難中隨時幫助我的神。求你保護我和我所愛的人，並讓我在驚慌中仍能靠你得力。" },
+    { ref:"以賽亞書 43:2", text:"你從水中經過，我必與你同在；你趟過江河，水必不漫過你。", prayer:"同在的神，你應許當我過水時你與我同在，水不會漫過我。求你在這艱難的時刻親自陪伴我，讓我在浪濤中仍能感受到你的手托著我，不被淹沒。" },
+    { ref:"那鴻書 1:7", text:"耶和華本為善，在患難的日子為人的保障，並且認得那些投靠他的人。", prayer:"保障的主，你認識每一個投靠你的人。我現在投靠你，因為你本為善。求你在這患難的日子成為我的堡壘，保護我，引導我渡過這場風暴。" }
+  ]},
+  { icon:"🕊️", name:"尋求平安", verses:[
+    { ref:"約翰福音 16:33", text:"我將這些事告訴你們，是要叫你們在我裡面有平安。在世上你們有苦難，但你們可以放心，我已經勝了世界。", prayer:"得勝的主，你已經勝了世界。讓你的得勝也成為我每日的力量。在苦難與混亂中，我選擇在你裡面尋求那真實的平安，因為你已為我爭戰並得勝。" },
+    { ref:"以賽亞書 26:3", text:"堅心倚賴你的，你必保守他十分平安，因為他倚靠你。", prayer:"保守平安的神，我要堅定地倚靠你，而非依賴環境的安穩。求你保守我的心思，遠離一切動搖和恐懼，使我的心如同風浪中紋絲不動的磐石，因為我立在你身上。" },
+    { ref:"腓立比書 4:7", text:"神所賜出人意外的平安，必在基督耶穌裡保守你們的心懷意念。", prayer:"天父，我需要那出人意外的平安，是環境給不了的平安。求你用這份平安如同衛兵一樣看守我的心懷意念，使我在一切變動中都能穩穩站立。" }
+  ]},
+  { icon:"👴", name:"孤單寂寞", verses:[
+    { ref:"希伯來書 13:5", text:"他曾說：我總不撇下你，也不丟棄你。", prayer:"永在的神，你說你總不撇下我，也不丟棄我。在這份孤單中，讓我真實地感受到你的同在。你是那永遠陪伴我、愛我不變的神，讓我在你裡面找到真正的陪伴。" },
+    { ref:"詩篇 23:4", text:"我雖然行過死蔭的幽谷，也不怕遭害，因為你與我同在。", prayer:"牧人耶穌，即使我行在最幽暗孤獨的幽谷，你都在我身邊。求你讓我感受到你真實的同在，使孤單不再是我的囚籠，而是我與你獨處的珍貴時光。" },
+    { ref:"馬太福音 28:20", text:"我就常與你們同在，直到世界的末了。", prayer:"主耶穌，你應許常與我同在，直到世界的末了。這句話讓我不再孤單。求你更新我對你同在的感受，讓我在靜默中也能聽見你的聲音，感覺到你的愛。" }
+  ]},
+  { icon:"🆕", name:"新的開始", verses:[
+    { ref:"以賽亞書 43:19", text:"看哪，我要做一件新事，如今要發現；我必在曠野開道路，在沙漠開江河。", prayer:"更新的神，感謝你應許在曠野開路，在沙漠開河。當我面對新的開始，有期待也有不安，求你引領每一步，讓這新的季節充滿你的恩典與驚喜。" },
+    { ref:"哥林多後書 5:17", text:"若有人在基督裡，他就是新造的人，舊事已過，都變成新的了。", prayer:"創造的主，感謝你讓我在基督裡成為新造的人。讓我不被過去的失敗或舊的模式拖住，帶著更新的心，充滿盼望地踏入你為我預備的新篇章。" },
+    { ref:"耶利米哀歌 3:23", text:"每早晨這都是新的，你的誠實極其廣大。", prayer:"信實的神，每個早晨你的慈愛都是新的。讓我每一天都以感恩的心醒來，帶著對你的信賴開始新的一天，知道你的誠實廣大，足以承托我所有的期盼。" }
+  ]},
+  { icon:"🙌", name:"感恩讚美", verses:[
+    { ref:"帖撒羅尼迦前書 5:18", text:"凡事謝恩，因為這是神在基督耶穌裡向你們所定的旨意。", prayer:"天父，我今天要刻意地感謝你。感謝你賜給我生命、健康、家人和數不清的恩典。培養我有一顆感恩的心，在一切境況中都能看見你的美善。" },
+    { ref:"詩篇 107:1", text:"你們要稱謝耶和華，因他本為善，他的慈愛永遠長存。", prayer:"慈愛的主，你本為善，你的愛永不改變！讓這真理充滿我的心，讓讚美自然而然從我口中流出。即使在困難中，讓我仍能數算你的恩典，高舉你的名。" },
+    { ref:"詩篇 100:4", text:"當稱謝進入他的門，當讚美進入他的院；當感謝他，稱頌他的名。", prayer:"神啊，我帶著感謝和讚美來到你面前。你配得一切的榮耀、尊貴和讚美。讓我的生命成為一首獻給你的讚美詩，每天的生活都在榮耀你的名。" }
+  ]},
+  { icon:"🎁", name:"尋找人生意義", verses:[
+    { ref:"耶利米書 29:11", text:"耶和華說：我知道我向你們所懷的意念是賜平安的意念，不是降災禍的意念，要叫你們末後有指望。", prayer:"有計畫的神，你知道你對我的旨意是美好的。當我對人生感到茫然，不知道自己的意義與價值時，讓我重新錨定在你的應許上，相信你有美好的計畫正在展開。" },
+    { ref:"以弗所書 2:10", text:"我們原是他的工作，在基督耶穌裡造成的，為要叫我們行善，就是神所預備叫我們行的。", prayer:"塑造者神，你創造了我，在基督裡預備了我當行的善事。幫助我發現你為我預備的那條獨特的道路，讓我的生命不虛度，每一天都走在你的旨意中。" },
+    { ref:"詩篇 138:8", text:"耶和華必成全關乎我的事；耶和華啊，你的慈愛永遠長存。", prayer:"成全者神，你必成全關乎我的事。求你在我對未來感到不確定時，讓這句話成為我的力量。相信你已開始的，你必完成，你的慈愛永不止息地伴隨著我的一生。" }
+  ]},
+  { icon:"🤒", name:"心理創傷", verses:[
+    { ref:"以賽亞書 61:3", text:"賜華冠與悲哀的人，喜樂油代替悲哀，讚美衣代替憂傷的靈。", prayer:"醫治者神，你能把悲哀換成華冠，把憂傷換成讚美。在我心理的創傷與傷痛中，求你親自來醫治最深的地方，讓你的愛和光照進每一個黑暗的角落。" },
+    { ref:"詩篇 34:18", text:"耶和華靠近傷心的人，拯救靈性痛悔的人。", prayer:"天父，我的靈魂受傷了，我的心需要你的拯救與醫治。感謝你應許靠近傷心的人，求你靠近我，讓我在脆弱中感受到你強壯的臂膀托著我，一步步帶我走向康復。" },
+    { ref:"啟示錄 21:4", text:"神要擦去他們一切的眼淚，不再有死亡，也不再有悲哀、哭號、疼痛。", prayer:"充滿盼望的神，終有一天你要擦去所有眼淚。讓末世的盼望今天也進入我心，讓我知道這些創傷與痛苦都是暫時的，你正在更新萬事，也正在更新我。" }
+  ]},
+  { icon:"🚀", name:"夢想目標", verses:[
+    { ref:"詩篇 37:4", text:"又要以耶和華為樂，他就將你心裡所求的賜給你。", prayer:"天父，我把我的夢想和渴望帶到你面前。求你先讓我以你為樂，讓你成為我最大的滿足。若我的夢想是符合你旨意的，求你賜給我；若不是，求你更新我的心願。" },
+    { ref:"哈巴谷書 2:3", text:"因為那默示有一定的日期，快要應驗，並不虛謊；雖然遲延，還要等候，因為必然臨到，不再遲延。", prayer:"信實的神，你的應許有一定的時間，雖然遲延，必然臨到。在追夢的漫長等待中，讓我不失去盼望，學習在等候中成長，準備好承接你的應許到來。" },
+    { ref:"馬可福音 11:24", text:"所以我告訴你們，凡你們禱告祈求的，無論是什麼，只要信是得著的，就必得著。", prayer:"主耶穌，我憑信心將我的目標和夢想帶到你面前，相信你能成就超過我所求所想的。求你在我追求的路上開路，也使我的夢想與你的榮耀連結在一起。" }
+  ]},
+  { icon:"🧭", name:"使命呼召", verses:[
+    { ref:"以賽亞書 6:8", text:"我又聽見主的聲音說：我可以差遣誰呢？誰肯為我們去呢？我說：我在這裡，請差遣我。", prayer:"差遣的神，我回應你的呼召說：我在這裡，請差遣我。雖然我有軟弱，但我願意被你使用。求你裝備我，賜我膽量和智慧去完成你給我的使命。" },
+    { ref:"馬太福音 5:16", text:"你們的光也當這樣照在人前，叫他們看見你們的好行為，便將榮耀歸給你們在天上的父。", prayer:"光的源頭，求你讓我成為你的光，照亮周圍的人。讓我的言行舉止都指向你，讓看見我生命的人，因此將榮耀歸給你，被你的愛所吸引。" },
+    { ref:"提摩太後書 1:9", text:"神救了我們，以聖召召我們，不是按我們的行為，乃是按他的旨意和恩典。", prayer:"呼召的神，你不是因為我的能力或成就才呼召我，乃是按你的恩典和旨意。讓我在使命中不倚靠自己的才能，乃是完全依賴你的恩典，使你的能力在我的軟弱上顯完全。" }
+  ]},
+  { icon:"💪", name:"軟弱無力", verses:[
+    { ref:"哥林多後書 12:9", text:"他對我說：我的恩典夠你用的，因為我的能力是在人的軟弱上顯得完全。", prayer:"全能的神，謝謝你說你的能力在軟弱上顯完全。我不再假裝剛強，我坦承我的軟弱和無力，讓你的恩典充滿我所有的不足，讓你的大能透過我顯明出來。" },
+    { ref:"以賽亞書 40:29", text:"疲乏的，他賜能力；軟弱的，他加力量。", prayer:"賜力量的神，我現在疲乏又軟弱。求你賜我力量，不是靠著意志力，乃是靠著你的供應。讓我停止掙扎，安息在你裡面，讓你的力量從裡面更新我。" },
+    { ref:"詩篇 46:1", text:"神是我們的避難所，是我們的力量，是我們在患難中隨時的幫助。", prayer:"我的力量與盾牌，你是我的避難所，在我最無力的時刻，是我隨時隨地的幫助。我跑到你這裡來，把一切的無力都交給你，從你這裡得到新的力量繼續前行。" }
+  ]},
+  { icon:"😰", name:"恐懼害怕", verses:[
+    { ref:"提摩太後書 1:7", text:"神賜給我們不是膽怯的心，乃是剛強、仁愛、謹守的心。", prayer:"剛強的神，你賜給我的不是膽怯，乃是剛強的心。我宣告這個真理對抗我心中的恐懼。求你讓聖靈在我裡面成為剛強仁愛謹守的靈，驅散一切的懼怕。" },
+    { ref:"以賽亞書 41:10", text:"你不要害怕，因為我與你同在；不要驚惶，因為我是你的神。我必堅固你，我必幫助你；我必用我公義的右手扶持你。", prayer:"扶持我的神，你說你要用公義的右手扶持我。在我害怕和驚惶的時候，讓我感受到你有力的右手托著我，提醒我你與我同在，我不必獨自面對任何恐懼。" },
+    { ref:"詩篇 27:1", text:"耶和華是我的亮光，是我的拯救，我還怕誰呢？", prayer:"我的亮光和拯救，有你在，我還怕誰呢？讓這句話成為我面對一切恐懼的宣告。求你成為黑暗中的光，使一切恐懼在你面前消散，使我以你為剛強的依靠。" }
+  ]},
+  { icon:"🕊️", name:"饒恕和好", verses:[
+    { ref:"馬太福音 6:14", text:"你們饒恕人的過犯，你們的天父也必饒恕你們的過犯。", prayer:"饒恕的神，你先饒恕了我一切的罪，幫助我也能饒恕傷害我的人。我知道饒恕不容易，求你賜我超然的能力，讓我不是靠感覺，而是憑信心選擇饒恕。" },
+    { ref:"歌羅西書 3:13", text:"倘若這人與那人有嫌隙，總要彼此包容，彼此饒恕；主怎樣饒恕了你們，你們也要怎樣饒恕人。", prayer:"主耶穌，你在十字架上饒恕了我一切的虧欠。讓我想起你的饒恕，使我也能饒恕別人。求你去除我心中的苦毒與嫌隙，用你的愛填滿那些受傷的空間。" },
+    { ref:"以弗所書 4:31-32", text:"一切苦毒、惱恨、忿怒、嚷鬧、毀謗，並一切的惡毒，都當從你們中間除掉；並要以恩慈相待，存憐憫的心。", prayer:"天父，求你幫助我從心裡除去所有的苦毒與惱恨，這些只會傷害我自己。讓你的恩慈和憐憫代替這些，使我能夠真正地與對方和好，榮耀你的名。" }
+  ]},
+  { icon:"⏳", name:"等候忍耐", verses:[
+    { ref:"詩篇 27:14", text:"要等候耶和華，當壯膽，堅固你的心；我再說，要等候耶和華。", prayer:"耶和華，我在等候，但我感到不耐煩。求你堅固我的心，使我能壯膽等候。讓等待不是消極的被動，而是積極地信靠你，知道你的時間永遠是對的。" },
+    { ref:"羅馬書 8:25", text:"但我們若盼望那所不見的，就必忍耐等候。", prayer:"盼望的神，在等候中我看不見答案，也看不見出路。但我選擇以盼望忍耐等候，相信你已在運作，只是我還看不見。讓這盼望成為我堅持的力量。" },
+    { ref:"以賽亞書 40:31", text:"但那等候耶和華的，必重新得力，他們必如鷹展翅上騰，奔跑卻不困倦，行走卻不疲乏。", prayer:"更新力量的神，謝謝你應許等候你的人必重新得力。在漫長的等候中，求你不斷更新我的力量，讓我在等候的過程中不倒下，而是如鷹展翅，越等越有力量。" }
+  ]},
+  { icon:"🌱", name:"靈性成長", verses:[
+    { ref:"彼得後書 3:18", text:"你們卻要在我們主救主耶穌基督的恩典和知識上有長進。", prayer:"栽培我的神，我渴望在信仰上繼續成長，更深認識你。求你打開我的心眼，使我在讀你話語和禱告中都能有新的領受，讓我的靈命一天比一天更成熟。" },
+    { ref:"詩篇 1:2-3", text:"惟喜愛耶和華的律法，晝夜思想，這人便為有福；他要像一棵樹，種在溪水旁。", prayer:"生命的泉源，讓我喜愛你的話語，晝夜默想。使我像一棵種在溪水旁的樹，深深紮根在你的話語和同在中，結出豐盛的果子，不因環境的乾旱而枯萎。" },
+    { ref:"腓立比書 1:6", text:"我深信那在你們心裡動了善工的，必成全這工，直到耶穌基督的日子。", prayer:"成全者神，你在我心裡動了善工，你也必成全。我相信你正在我生命中工作，讓我不灰心，不放棄，與你合作，讓你在我身上的旨意完全成就。" }
+  ]}
+];
+
+let curCat = null, curVerse = null;
+
+function gotoPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderCats() {
+  const g = document.getElementById('catGrid');
+  g.innerHTML = '';
+  data.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.className = 'cat-btn';
+    b.innerHTML = `<span class="cat-icon">${c.icon}</span>${c.name}`;
+    b.onclick = () => showCards(i);
+    g.appendChild(b);
+  });
+}
+
+function showCards(idx) {
+  curCat = idx;
+  curVerse = null;
+  const cat = data[idx];
+  document.getElementById('catTitle').textContent = `${cat.icon}　${cat.name}`;
+  const row = document.getElementById('cardsRow');
+  row.innerHTML = '';
+  cat.verses.forEach((v, i) => {
+    const card = document.createElement('div');
+    card.className = 'verse-card';
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="card-face card-back">
+          <div class="cb-deco"></div>
+          <div class="cross"></div>
+          <div class="cb-text">GOD'S WORD</div>
+        </div>
+        <div class="card-face card-front">
+          <div class="v-ref">${v.ref}</div>
+          <div class="v-text">${v.text}</div>
+          <div class="v-cat">${cat.name}</div>
+        </div>
+      </div>`;
+    card.onclick = () => {
+      document.querySelectorAll('.verse-card').forEach(c => c.classList.remove('flipped'));
+      card.classList.add('flipped');
+      curVerse = i;
+      const pb = document.getElementById('prayBtn');
+      pb.disabled = false;
+    };
+    row.appendChild(card);
+  });
+  const pb = document.getElementById('prayBtn');
+  pb.disabled = true;
+  gotoPage('pg-cards');
+}
+
+function drawRandom() {
+  const cards = document.querySelectorAll('.verse-card');
+  cards.forEach(c => c.classList.remove('flipped'));
+  const pick = Math.floor(Math.random() * cards.length);
+  setTimeout(() => {
+    cards[pick].classList.add('flipped');
+    curVerse = pick;
+    document.getElementById('prayBtn').disabled = false;
+  }, 100);
+}
+
+function showPrayer() {
+  if (curVerse === null) return;
+  const v = data[curCat].verses[curVerse];
+  document.getElementById('pr-ref').textContent = v.ref;
+  document.getElementById('pr-vtext').textContent = v.text;
+  document.getElementById('pr-prayer').textContent = v.prayer;
+  gotoPage('pg-prayer');
+}
+
+document.getElementById('drawBtn').onclick = drawRandom;
+document.getElementById('prayBtn').onclick = showPrayer;
+document.getElementById('backBtn').onclick = () => gotoPage('pg-select');
+document.getElementById('prayBackCards').onclick = () => gotoPage('pg-cards');
+document.getElementById('prayBackSelect').onclick = () => gotoPage('pg-select');
+document.getElementById('newDrawBtn').onclick = () => { gotoPage('pg-cards'); setTimeout(drawRandom, 80); };
+
+renderCats();
+</script>
+</body>
+</html>
